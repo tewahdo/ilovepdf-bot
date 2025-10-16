@@ -1,0 +1,22 @@
+{
+  "name": "ilovepdf-telegram-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "fs-extra": "^11.3.2",
+    "node-fetch": "^3.3.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-merger-js": "^5.1.2",
+    "path": "^0.12.7"
+  }
+}

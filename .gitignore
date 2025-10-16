@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Temporary files / PDFs
+tmp/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Optional: VSCode settings
+.vscode/
