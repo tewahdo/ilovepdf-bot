@@ -1,16 +1,14 @@
 # Node modules
 node_modules/
 
-# Environment variables
-.env
-
-# Temporary files / PDFs
+# Temporary files
 tmp/
 *.log
 
-# OS-specific files
+# Environment files
+.env
+.env.local
+
+# OS files
 .DS_Store
 Thumbs.db
-
-# Optional: VSCode settings
-.vscode/

@@ -11,12 +11,14 @@
     "node": "22.x"
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
     "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "fs-extra": "^11.3.2",
     "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.66.0",
+    "path": "^0.12.7",
     "pdf-lib": "^1.17.1",
-    "pdf-merger-js": "^5.1.2",
-    "path": "^0.12.7"
+    "pdf-merger-js": "^5.1.2"
   }
 }
