@@ -1,3 +1,4 @@
+import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import fs from "fs-extra";
 import path from "path";
@@ -7,22 +8,40 @@ import dotenv from "dotenv";
 import { mergePDFs } from "./utils/merge.js";
 import { splitPDF } from "./utils/split.js";
 
-// Load environment variables
+// Load env variables
 dotenv.config();
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-if (!TOKEN) {
-  console.error("Missing TELEGRAM_BOT_TOKEN. Set it in .env or Render environment variables.");
+const URL = process.env.RENDER_EXTERNAL_URL; // Render gives this automatically
+const PORT = process.env.PORT || 3000;
+
+if (!TOKEN || !URL) {
+  console.error("❌ Missing TELEGRAM_BOT_TOKEN or RENDER_EXTERNAL_URL!");
   process.exit(1);
 }
 
-// Polling bot
-const bot = new TelegramBot(TOKEN, { polling: true });
+const bot = new TelegramBot(TOKEN, { webHook: true });
+bot.setWebHook(`${URL}/bot${TOKEN}`);
 
-// Global state
+const app = express();
+app.use(express.json());
+app.post(`/bot${TOKEN}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+app.get("/", (req, res) => {
+  res.send("✅ iLovePDF Telegram Bot is running successfully!");
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// ------------------------ BOT LOGIC ------------------------
+
 const userAction = {};
 const userFiles = {};
 
-// /start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "Welcome to iLovePDF Bot! 📝\nChoose an action:", {
@@ -37,7 +56,6 @@ bot.onText(/\/start/, (msg) => {
   });
 });
 
-// Handle button clicks
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const action = query.data;
@@ -57,11 +75,9 @@ bot.on("callback_query", async (query) => {
   bot.sendMessage(chatId, `You selected: ${action}\nPlease upload your file(s). When done, type /done.`);
 });
 
-// Handle uploaded PDFs
 bot.on("document", async (msg) => {
   const chatId = msg.chat.id;
   const action = userAction[chatId];
-
   if (!action) return bot.sendMessage(chatId, "Please select an action first using /start.");
 
   const fileId = msg.document.file_id;
@@ -100,7 +116,6 @@ bot.on("document", async (msg) => {
   }
 });
 
-// /done for merging
 bot.onText(/\/done/, async (msg) => {
   const chatId = msg.chat.id;
   if (!userFiles[chatId] || userFiles[chatId].length === 0) {
@@ -108,13 +123,11 @@ bot.onText(/\/done/, async (msg) => {
   }
 
   await bot.sendMessage(chatId, "Merging your PDFs...");
-
   try {
     const mergedPath = path.join("./tmp", `merged_${chatId}.pdf`);
     await mergePDFs(userFiles[chatId], mergedPath);
     await bot.sendDocument(chatId, mergedPath);
     await fs.remove(mergedPath);
-
     for (const f of userFiles[chatId]) await fs.remove(f);
     userFiles[chatId] = [];
   } catch (err) {
@@ -123,7 +136,6 @@ bot.onText(/\/done/, async (msg) => {
   }
 });
 
-// Handlers
 async function handleSplit(chatId, filePath) {
   const outDir = path.join("./tmp", `split_${chatId}_${Date.now()}`);
   const files = await splitPDF(filePath, outDir);
